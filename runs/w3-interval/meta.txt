@@ -1,0 +1,28 @@
+名字: w3-interval
+开始: 2026-10-28T23:03:21+08:00
+主机: Linux 6.8.0-136-generic x86_64
+CPU: 4 个逻辑核；General Purpose Processor
+内存: 7556 MiB，available 5957 MiB
+数据目录: data → /dev/vda1（ext4），统计的磁盘: vda
+enrolld: pid 3522623，绑定的核 2,3
+loadgen: 绑定的核 0-1
+接口: /api/enroll；SLO 阈值 0.02s
+promsteps 变量: route=/api/enroll slo=0.02 cpus=2|3 disk=vda
+仓库提交: 1bc6d51，未提交的改动 4 处
+压测命令: bin/loadgen '-url' 'http://127.0.0.1:8080/api/enroll' '-body' '{"student":"s{{seq}}","course":"c1"}' '-rates' '325,1219,3250'
+enrolld /config:
+{
+  "addr": "127.0.0.1:8080",
+  "work": 200000,
+  "pool": 4,
+  "db_ms": 10,
+  "pool_timeout": "1s",
+  "sync": "interval",
+  "sync_interval": "1s",
+  "data": "data",
+  "go_version": "go1.26.9",
+  "gomaxprocs": 2,
+  "gogc": "",
+  "pid": 3522623,
+  "started": "2026-10-28T23:01:15+08:00"
+}
