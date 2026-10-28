@@ -1,0 +1,28 @@
+名字: r1-pool4
+开始: 2026-10-28T14:53:29+08:00
+主机: Linux 6.8.0-136-generic x86_64
+CPU: 4 个逻辑核；General Purpose Processor
+内存: 7556 MiB，available 6879 MiB
+数据目录: data → /dev/vda1（ext4），统计的磁盘: vda
+enrolld: pid 3422966，绑定的核 2,3
+loadgen: 绑定的核 0-1
+接口: /api/courses/{id}；SLO 阈值 0.05s
+promsteps 变量: route=/api/courses/{id} slo=0.05 cpus=2|3 disk=vda
+仓库提交: bc9f7d2，未提交的改动 1 处
+压测命令: bin/loadgen '-url' 'http://127.0.0.1:8080/api/courses/1' '-rates' '76,153,229,267,305,343,381,419,458'
+enrolld /config:
+{
+  "addr": "127.0.0.1:8080",
+  "work": 200000,
+  "pool": 4,
+  "db_ms": 10,
+  "pool_timeout": "1s",
+  "sync": "each",
+  "sync_interval": "1s",
+  "data": "data",
+  "go_version": "go1.26.9",
+  "gomaxprocs": 2,
+  "gogc": "",
+  "pid": 3422966,
+  "started": "2026-10-28T14:46:46+08:00"
+}
