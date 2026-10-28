@@ -1,0 +1,28 @@
+名字: r2-pool80
+开始: 2026-10-28T15:12:17+08:00
+主机: Linux 6.8.0-136-generic x86_64
+CPU: 4 个逻辑核；General Purpose Processor
+内存: 7556 MiB，available 6871 MiB
+数据目录: data → /dev/vda1（ext4），统计的磁盘: vda
+enrolld: pid 3428148，绑定的核 2,3
+loadgen: 绑定的核 0-1
+接口: /api/courses/{id}；SLO 阈值 0.05s
+promsteps 变量: route=/api/courses/{id} slo=0.05 cpus=2|3 disk=vda
+仓库提交: bc9f7d2，未提交的改动 2 处
+压测命令: bin/loadgen '-url' 'http://127.0.0.1:8080/api/courses/1' '-rates' '1141,2281,3042,3422,3802,4182,4752,5703'
+enrolld /config:
+{
+  "addr": "127.0.0.1:8080",
+  "work": 200000,
+  "pool": 80,
+  "db_ms": 10,
+  "pool_timeout": "1s",
+  "sync": "each",
+  "sync_interval": "1s",
+  "data": "data",
+  "go_version": "go1.26.9",
+  "gomaxprocs": 2,
+  "gogc": "",
+  "pid": 3428148,
+  "started": "2026-10-28T15:11:02+08:00"
+}
