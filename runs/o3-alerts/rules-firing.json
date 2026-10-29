@@ -1,0 +1,151 @@
+{
+    "status": "success",
+    "data": {
+        "groups": [
+            {
+                "name": "enrolld-read-slo-alerts",
+                "file": "deploy/rules.yml",
+                "rules": [
+                    {
+                        "state": "firing",
+                        "name": "EnrolldReadSLOFastBurn",
+                        "query": "enrolld:read_slo_burn_rate:rate5m > 14.4 and enrolld:read_slo_burn_rate:rate1m > 14.4",
+                        "duration": 60,
+                        "keepFiringFor": 0,
+                        "labels": {
+                            "severity": "page",
+                            "slo": "read-p99-50ms"
+                        },
+                        "annotations": {
+                            "description": "GET /api/courses/{id} \u5728 5 \u5206\u949f\u548c 1 \u5206\u949f\u7a97\u53e3\u5185\u7684\u71c3\u70e7\u7387\u90fd\u8d85\u8fc7 14.4\uff0c \u5373\u574f\u8bf7\u6c42\uff08\u975e 200 \u6216\u8d85\u8fc7 50 ms\uff09\u6bd4\u4f8b\u8d85\u8fc7 14.4%\u3002\u6309\u6b64\u901f\u5ea6\uff0c30 \u5929\u7684\u9519\u8bef\u9884\u7b97\u7ea6 2 \u5929\u5185\u8017\u5c3d\u3002 \u5148\u770b\u670d\u52a1\u5c42\u7684\u5728\u9014\u8bf7\u6c42\u6570\u3001\u8fde\u63a5\u6c60\u7b49\u5f85 p99\uff08db_pool_wait_seconds\uff09\uff0c\u518d\u770b\u8d44\u6e90\u5c42\u7684 CPU \u4e0e\u8c03\u5ea6\u7b49\u5f85\u3002",
+                            "summary": "\u8bfb\u63a5\u53e3\u9519\u8bef\u9884\u7b97\u5feb\u901f\u71c3\u70e7\uff085m \u71c3\u70e7\u7387 {{ $value | printf \"%.1f\" }}\uff09"
+                        },
+                        "alerts": [
+                            {
+                                "labels": {
+                                    "alertname": "EnrolldReadSLOFastBurn",
+                                    "severity": "page",
+                                    "slo": "read-p99-50ms"
+                                },
+                                "annotations": {
+                                    "description": "GET /api/courses/{id} \u5728 5 \u5206\u949f\u548c 1 \u5206\u949f\u7a97\u53e3\u5185\u7684\u71c3\u70e7\u7387\u90fd\u8d85\u8fc7 14.4\uff0c \u5373\u574f\u8bf7\u6c42\uff08\u975e 200 \u6216\u8d85\u8fc7 50 ms\uff09\u6bd4\u4f8b\u8d85\u8fc7 14.4%\u3002\u6309\u6b64\u901f\u5ea6\uff0c30 \u5929\u7684\u9519\u8bef\u9884\u7b97\u7ea6 2 \u5929\u5185\u8017\u5c3d\u3002 \u5148\u770b\u670d\u52a1\u5c42\u7684\u5728\u9014\u8bf7\u6c42\u6570\u3001\u8fde\u63a5\u6c60\u7b49\u5f85 p99\uff08db_pool_wait_seconds\uff09\uff0c\u518d\u770b\u8d44\u6e90\u5c42\u7684 CPU \u4e0e\u8c03\u5ea6\u7b49\u5f85\u3002",
+                                    "summary": "\u8bfb\u63a5\u53e3\u9519\u8bef\u9884\u7b97\u5feb\u901f\u71c3\u70e7\uff085m \u71c3\u70e7\u7387 73.4\uff09"
+                                },
+                                "state": "firing",
+                                "activeAt": "2026-10-29T08:13:49.221054497Z",
+                                "value": "7.336713230553417e+01"
+                            }
+                        ],
+                        "health": "ok",
+                        "evaluationTime": 0.000363215,
+                        "lastEvaluation": "2026-10-29T16:16:04.222560161+08:00",
+                        "type": "alerting"
+                    },
+                    {
+                        "state": "firing",
+                        "name": "EnrolldReadSLOSlowBurn",
+                        "query": "enrolld:read_slo_burn_rate:rate30m > 6 and enrolld:read_slo_burn_rate:rate5m > 6",
+                        "duration": 120,
+                        "keepFiringFor": 0,
+                        "labels": {
+                            "severity": "ticket",
+                            "slo": "read-p99-50ms"
+                        },
+                        "annotations": {
+                            "description": "GET /api/courses/{id} \u5728 30 \u5206\u949f\u548c 5 \u5206\u949f\u7a97\u53e3\u5185\u7684\u71c3\u70e7\u7387\u90fd\u8d85\u8fc7 6\uff0c \u5373\u574f\u8bf7\u6c42\u6bd4\u4f8b\u8d85\u8fc7 6%\u3002\u6309\u6b64\u901f\u5ea6\uff0c30 \u5929\u7684\u9519\u8bef\u9884\u7b97\u7ea6 5 \u5929\u5185\u8017\u5c3d\uff0c\u9700\u8981\u5b89\u6392\u5bb9\u91cf\u6216\u4ee3\u7801\u5c42\u9762\u7684\u5904\u7406\u3002",
+                            "summary": "\u8bfb\u63a5\u53e3\u9519\u8bef\u9884\u7b97\u6301\u7eed\u71c3\u70e7\uff0830m \u71c3\u70e7\u7387 {{ $value | printf \"%.1f\" }}\uff09"
+                        },
+                        "alerts": [
+                            {
+                                "labels": {
+                                    "alertname": "EnrolldReadSLOSlowBurn",
+                                    "severity": "ticket",
+                                    "slo": "read-p99-50ms"
+                                },
+                                "annotations": {
+                                    "description": "GET /api/courses/{id} \u5728 30 \u5206\u949f\u548c 5 \u5206\u949f\u7a97\u53e3\u5185\u7684\u71c3\u70e7\u7387\u90fd\u8d85\u8fc7 6\uff0c \u5373\u574f\u8bf7\u6c42\u6bd4\u4f8b\u8d85\u8fc7 6%\u3002\u6309\u6b64\u901f\u5ea6\uff0c30 \u5929\u7684\u9519\u8bef\u9884\u7b97\u7ea6 5 \u5929\u5185\u8017\u5c3d\uff0c\u9700\u8981\u5b89\u6392\u5bb9\u91cf\u6216\u4ee3\u7801\u5c42\u9762\u7684\u5904\u7406\u3002",
+                                    "summary": "\u8bfb\u63a5\u53e3\u9519\u8bef\u9884\u7b97\u6301\u7eed\u71c3\u70e7\uff0830m \u71c3\u70e7\u7387 73.4\uff09"
+                                },
+                                "state": "firing",
+                                "activeAt": "2026-10-29T08:13:44.221054497Z",
+                                "value": "7.336713230553417e+01"
+                            }
+                        ],
+                        "health": "ok",
+                        "evaluationTime": 0.00020918,
+                        "lastEvaluation": "2026-10-29T16:16:04.22293027+08:00",
+                        "type": "alerting"
+                    }
+                ],
+                "interval": 5,
+                "limit": 0,
+                "evaluationTime": 0.000619512,
+                "lastEvaluation": "2026-10-29T16:16:04.222522599+08:00"
+            },
+            {
+                "name": "enrolld-read-slo-recording",
+                "file": "deploy/rules.yml",
+                "rules": [
+                    {
+                        "name": "enrolld:read_slo_bad_ratio:rate1m",
+                        "query": "1 - ((sum(rate(http_request_duration_seconds_bucket{code=\"200\",job=\"enrolld\",le=\"0.05\",route=\"/api/courses/{id}\"}[1m])) or vector(0)) / sum(rate(http_request_duration_seconds_count{job=\"enrolld\",route=\"/api/courses/{id}\"}[1m])))",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 0.000337121,
+                        "lastEvaluation": "2026-10-29T16:16:05.733178796+08:00",
+                        "type": "recording"
+                    },
+                    {
+                        "name": "enrolld:read_slo_bad_ratio:rate5m",
+                        "query": "1 - ((sum(rate(http_request_duration_seconds_bucket{code=\"200\",job=\"enrolld\",le=\"0.05\",route=\"/api/courses/{id}\"}[5m])) or vector(0)) / sum(rate(http_request_duration_seconds_count{job=\"enrolld\",route=\"/api/courses/{id}\"}[5m])))",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 0.000192088,
+                        "lastEvaluation": "2026-10-29T16:16:05.733526397+08:00",
+                        "type": "recording"
+                    },
+                    {
+                        "name": "enrolld:read_slo_bad_ratio:rate30m",
+                        "query": "1 - ((sum(rate(http_request_duration_seconds_bucket{code=\"200\",job=\"enrolld\",le=\"0.05\",route=\"/api/courses/{id}\"}[30m])) or vector(0)) / sum(rate(http_request_duration_seconds_count{job=\"enrolld\",route=\"/api/courses/{id}\"}[30m])))",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 0.00017317,
+                        "lastEvaluation": "2026-10-29T16:16:05.733721684+08:00",
+                        "type": "recording"
+                    },
+                    {
+                        "name": "enrolld:read_slo_burn_rate:rate1m",
+                        "query": "enrolld:read_slo_bad_ratio:rate1m / 0.01",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 4.4266e-05,
+                        "lastEvaluation": "2026-10-29T16:16:05.733897845+08:00",
+                        "type": "recording"
+                    },
+                    {
+                        "name": "enrolld:read_slo_burn_rate:rate5m",
+                        "query": "enrolld:read_slo_bad_ratio:rate5m / 0.01",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 5.2728e-05,
+                        "lastEvaluation": "2026-10-29T16:16:05.733944608+08:00",
+                        "type": "recording"
+                    },
+                    {
+                        "name": "enrolld:read_slo_burn_rate:rate30m",
+                        "query": "enrolld:read_slo_bad_ratio:rate30m / 0.01",
+                        "labels": {},
+                        "health": "ok",
+                        "evaluationTime": 4.4524e-05,
+                        "lastEvaluation": "2026-10-29T16:16:05.733999853+08:00",
+                        "type": "recording"
+                    }
+                ],
+                "interval": 5,
+                "limit": 0,
+                "evaluationTime": 0.000887904,
+                "lastEvaluation": "2026-10-29T16:16:05.733157972+08:00"
+            }
+        ]
+    }
+}

@@ -1,0 +1,183 @@
+{
+  "time": "2026-10-29T18:39:57",
+  "cells": [
+    {
+      "cell": "r1c1_journey_sli",
+      "series": 2,
+      "values": [
+        {
+          "label": "read_ok_le_50ms",
+          "value": "0.011762082038754725"
+        },
+        {
+          "label": "slo_target_0.99",
+          "value": "0.99"
+        }
+      ]
+    },
+    {
+      "cell": "r1c2_submit_success",
+      "series": 1,
+      "values": [
+        {
+          "label": "tech_success_ratio",
+          "value": "0.8521017419829032"
+        }
+      ]
+    },
+    {
+      "cell": "r1c3_active_conns",
+      "series": 3,
+      "values": [
+        {
+          "label": "enrolld_open_fds",
+          "value": "536"
+        },
+        {
+          "label": "enrolld_goroutines",
+          "value": "992"
+        },
+        {
+          "label": "host_tcp_established",
+          "value": "1062"
+        }
+      ]
+    },
+    {
+      "cell": "r2c1_route_qps_err",
+      "series": 2,
+      "values": [
+        {
+          "label": "total_rps",
+          "value": "443.8277990112995"
+        },
+        {
+          "label": "error_rps",
+          "value": "65.64135833333334"
+        }
+      ]
+    },
+    {
+      "cell": "r2c2_route_p50_p99",
+      "series": 2,
+      "values": [
+        {
+          "label": "p50_ms",
+          "value": "1279.4146801099837"
+        },
+        {
+          "label": "p99_ms",
+          "value": "1985.5882936021997"
+        }
+      ]
+    },
+    {
+      "cell": "r2c3_service_queues",
+      "series": 7,
+      "values": [
+        {
+          "label": "http_inflight",
+          "value": "460"
+        },
+        {
+          "label": "http_inflight",
+          "value": "0"
+        },
+        {
+          "label": "http_inflight",
+          "value": "0"
+        },
+        {
+          "label": "http_inflight",
+          "value": "0"
+        },
+        {
+          "label": "db_pool_in_use",
+          "value": "4"
+        },
+        {
+          "label": "db_pool_wait_p99_ms",
+          "value": "1938.1478856602882"
+        },
+        {
+          "label": "go_sched_wait_p99_ms",
+          "value": "0.4718104138851801"
+        }
+      ]
+    },
+    {
+      "cell": "r3c1_cpu_mem_use",
+      "series": 5,
+      "values": [
+        {
+          "label": "enrolld_cpu_busy_pct",
+          "value": "11.172727272727414"
+        },
+        {
+          "label": "cpu_steal_pct",
+          "value": "0"
+        },
+        {
+          "label": "cpu_psi_some_pct",
+          "value": "3.425158181817923"
+        },
+        {
+          "label": "procs_running",
+          "value": "1"
+        },
+        {
+          "label": "mem_available_gib",
+          "value": "6.626491546630859"
+        }
+      ]
+    },
+    {
+      "cell": "r3c2_disk_fsync_use",
+      "series": 5,
+      "values": [
+        {
+          "label": "disk_w_await_ms",
+          "value": "0.5660377358499717"
+        },
+        {
+          "label": "disk_f_await_ms",
+          "value": "0.09090909090920202"
+        },
+        {
+          "label": "disk_aqu_sz",
+          "value": "0.0016727272727290585"
+        },
+        {
+          "label": "disk_util_ratio",
+          "value": "0.0004000000000008764"
+        },
+        {
+          "label": "app_fsync_p99_ms",
+          "value": "NaN"
+        }
+      ]
+    },
+    {
+      "cell": "r3c3_network_use",
+      "series": 4,
+      "values": [
+        {
+          "label": "tx_mib_s",
+          "value": "0.0013642051003196023"
+        },
+        {
+          "label": "tx_mib_s",
+          "value": "0.2416137001731179"
+        },
+        {
+          "label": "tcp_retrans_per_s",
+          "value": "0"
+        },
+        {
+          "label": "listen_overflows_per_s",
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+step,target_rps,server_rps,server_error_rate,server_p99_ms,server_mean_ms,inflight_avg,cpu_cores,cpu_ms_per_req,cpu_wait_threads,sched_wait_p99_ms,pool_in_use_avg,pool_wait_p99_ms,db_query_mean_ms,fsync_per_s,fsync_mean_ms,fsync_p99_ms,batch_mean,goroutines_max,server_slo_good
+1,200,201.167,0,19.9774,11.5018,2.31304,0.111867,0.556092,0.0311276,0.473854,2.14783,9.42631,10.4656,0,NaN,NaN,NaN,26,1
+2,450,449.033,0.152663,1986.61,1001.79,450.096,0.228965,0.509908,0.0560314,0.472701,3.93913,1940.67,10.4801,0,NaN,NaN,NaN,1025,0
+3,450,449.395,0.153794,1986.45,1001.72,449.826,0.228429,0.508304,0.0553861,0.472593,3.90435,1940.92,10.4859,0,NaN,NaN,NaN,1024,0
+4,450,447.114,0.149281,1986.26,1001.43,447.33,0.228062,0.510076,0.0573462,0.474053,3.93913,1939.58,10.4833,0,NaN,NaN,NaN,1025,0

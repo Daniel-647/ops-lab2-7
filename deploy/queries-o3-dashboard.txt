@@ -1,0 +1,40 @@
+# 选做 O3：按 L-08 第 29 页“三行九格”为 enrolld 搭建的看板查询。
+#
+# 三行按排障动线自上而下排列：
+#   第 1 行（业务层）：学生是否选课成功？（症状：决定是否需要行动）
+#   第 2 行（服务层 · RED）：哪个接口慢、错、在哪里排队？（定位受损路径与内部队列）
+#   第 3 行（资源层 · USE）：底层在等待哪项硬件/内核能力？（定位物理瓶颈：CPU/内存、磁盘、网络）
+#
+# 每行格式：<格编号>  <PromQL>
+# 可用 scripts/o3-dashboard-url.sh 生成在 Prometheus Web UI 一次打开全部 9 格的链接。
+# 本组没有提供 Grafana JSON，看板以 Prometheus 自带 Graph 呈现；要接 Grafana 可把下列查询逐格粘进去。
+
+# ---- 第 1 行：业务层（学生是否选课成功） ----
+# [1,1] 开放窗口关键操作达标率 + 目标线（代理课件“开放后 10 分钟完成率 + 95% 目标线”；enrolld 无学生去重漏斗埋点，用读 ≤50ms、写 ≤20ms 的实时 SLI 达标率叠加 0.99 目标线代替）
+r1c1_journey_sli      label_replace((sum(rate(http_request_duration_seconds_bucket{job="enrolld",route="/api/courses/{id}",code="200",le="0.05"}[1m])) or vector(0)) / (sum(rate(http_request_duration_seconds_count{job="enrolld",route="/api/courses/{id}"}[1m])) > 0), "sli", "read_ok_le_50ms", "", "") or label_replace((sum(rate(http_request_duration_seconds_bucket{job="enrolld",route="/api/enroll",code="200",le="0.02"}[1m])) or vector(0)) / (sum(rate(http_request_duration_seconds_count{job="enrolld",route="/api/enroll"}[1m])) > 0), "sli", "enroll_ok_le_20ms", "", "") or label_replace(vector(0.99), "sli", "slo_target_0.99", "", "")
+
+# [1,2] 提交技术成功率（排除 400～498 参数/业务拒绝，保留 499 客户端超时断开与 5xx 技术失败；Grafana 右轴同时叠加 rate(enroll_commits_total[1m]) 核对落盘确认数）
+r1c2_submit_success   label_replace((sum by (route) (rate(http_requests_total{job="enrolld",code="200"}[1m])) or 0 * sum by (route) (rate(http_requests_total{job="enrolld",code!~"4[0-8]."}[1m]))) / (sum by (route) (rate(http_requests_total{job="enrolld",code!~"4[0-8]."}[1m])) > 0), "metric", "tech_success_ratio", "", "")
+
+# [1,3] 在线并发代理与连接数核对（enrolld 无登录会话埋点，用进程打开 FD 数、活跃 goroutine 数与主机 TCP ESTABLISHED 连接数交叉核对）
+r1c3_active_conns     label_replace(sum(process_open_fds{job="enrolld"}), "metric", "enrolld_open_fds", "", "") or label_replace(sum(go_goroutines{job="enrolld"}), "metric", "enrolld_goroutines", "", "") or label_replace(sum(node_netstat_Tcp_CurrEstab{job="node"}), "metric", "host_tcp_established", "", "")
+
+# ---- 第 2 行：服务层 · RED（谁在等待） ----
+# [2,1] 按接口请求速率 QPS 与非 200 错误速率（Grafana 右轴同时叠加按接口 5xx 错误比例）
+r2c1_route_qps_err    label_replace(sum by (route) (rate(http_requests_total{job="enrolld"}[1m])), "kind", "total_rps", "", "") or label_replace(sum by (route) (rate(http_requests_total{job="enrolld",code!="200"}[1m])), "kind", "error_rps", "", "")
+
+# [2,2] 按接口服务端响应耗时 p50 与 p99（毫秒，同图对比中位数与长尾）
+r2c2_route_p50_p99    label_replace(1000 * histogram_quantile(0.50, sum by (route, le) (rate(http_request_duration_seconds_bucket{job="enrolld"}[1m]))), "quantile", "p50_ms", "", "") or label_replace(1000 * histogram_quantile(0.99, sum by (route, le) (rate(http_request_duration_seconds_bucket{job="enrolld"}[1m]))), "quantile", "p99_ms", "", "")
+
+# [2,3] 服务内部队列：HTTP 在途请求、连接池占用、连接池等待 p99(ms)、Go 调度等待 p99(ms)（enrolld 无 Kafka 异步队列，故观测连接池与运行时两级内部排队）
+r2c3_service_queues   label_replace(sum by (route) (http_inflight_requests{job="enrolld"}), "queue", "http_inflight", "", "") or label_replace(sum(db_pool_in_use{job="enrolld"}), "queue", "db_pool_in_use", "", "") or label_replace(1000 * histogram_quantile(0.99, sum by (le) (rate(db_pool_wait_seconds_bucket{job="enrolld"}[1m]))), "queue", "db_pool_wait_p99_ms", "", "") or label_replace(1000 * histogram_quantile(0.99, sum by (le) (rate(go_sched_latencies_seconds_bucket{job="enrolld"}[1m]))), "queue", "go_sched_wait_p99_ms", "", "")
+
+# ---- 第 3 行：资源层 · USE（在等待什么） ----
+# [3,1] CPU · 内存（绑核 2-3 忙碌率%、宿主机抢占 %st、CPU PSI 等待%、内核可运行队列 r、可用内存 GiB；Grafana 同时观测 pswpin 换页速率）
+r3c1_cpu_mem_use      label_replace(100 * sum(rate(node_cpu_seconds_total{job="node",mode!~"idle|iowait",cpu=~"2|3"}[1m])) / count(node_cpu_seconds_total{job="node",mode="idle",cpu=~"2|3"}), "metric", "enrolld_cpu_busy_pct", "", "") or label_replace(100 * avg(rate(node_cpu_seconds_total{job="node",mode="steal"}[1m])), "metric", "cpu_steal_pct", "", "") or label_replace(100 * sum(rate(node_pressure_cpu_waiting_seconds_total{job="node"}[1m])), "metric", "cpu_psi_some_pct", "", "") or label_replace(sum(node_procs_running{job="node"}), "metric", "procs_running", "", "") or label_replace(sum(node_memory_MemAvailable_bytes{job="node"}) / 1073741824, "metric", "mem_available_gib", "", "")
+
+# [3,2] 磁盘与持久化（vda 块设备 w_await、f_await、平均队列 aqu-sz、设备忙比例 %util，以及应用层 fsync p99 耗时 ms）
+r3c2_disk_fsync_use   label_replace(1000 * sum(rate(node_disk_write_time_seconds_total{job="node",device="vda"}[1m])) / (sum(rate(node_disk_writes_completed_total{job="node",device="vda"}[1m])) > 0), "metric", "disk_w_await_ms", "", "") or label_replace(1000 * sum(rate(node_disk_flush_requests_time_seconds_total{job="node",device="vda"}[1m])) / (sum(rate(node_disk_flush_requests_total{job="node",device="vda"}[1m])) > 0), "metric", "disk_f_await_ms", "", "") or label_replace(sum(rate(node_disk_io_time_weighted_seconds_total{job="node",device="vda"}[1m])), "metric", "disk_aqu_sz", "", "") or label_replace(sum(rate(node_disk_io_time_seconds_total{job="node",device="vda"}[1m])), "metric", "disk_util_ratio", "", "") or label_replace(1000 * histogram_quantile(0.99, sum by (le) (rate(enroll_fsync_duration_seconds_bucket{job="enrolld"}[1m]))), "metric", "app_fsync_p99_ms", "", "")
+
+# [3,3] 网络（各网卡发送带宽 MiB/s、TCP 重传/s、全连接队列溢出 ListenOverflows/s、conntrack 表占用率%）
+r3c3_network_use      label_replace(sum by (device) (rate(node_network_transmit_bytes_total{job="node"}[1m])) / 1048576, "metric", "tx_mib_s", "", "") or label_replace(sum(rate(node_netstat_Tcp_RetransSegs{job="node"}[1m])), "metric", "tcp_retrans_per_s", "", "") or label_replace(sum(rate(node_netstat_TcpExt_ListenOverflows{job="node"}[1m])), "metric", "listen_overflows_per_s", "", "") or label_replace(100 * sum(node_nf_conntrack_entries{job="node"}) / (sum(node_nf_conntrack_entries_limit{job="node"}) > 0), "metric", "conntrack_used_pct", "", "")
