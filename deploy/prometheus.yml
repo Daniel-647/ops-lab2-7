@@ -4,6 +4,11 @@ global:
   scrape_interval: 5s      # 默认是 1 分钟；一个阶段只有 30 s，抓得太稀就看不出变化
   evaluation_interval: 5s
 
+# 选做 O3：读路径 SLO 的燃烧率告警。相对路径以本配置文件所在目录（deploy/）为基准。
+# 修改后不必重启 Prometheus：kill -HUP <prometheus 的 pid> 即可重新加载。
+rule_files:
+  - rules.yml
+
 scrape_configs:
   - job_name: enrolld
     # 在途请求数、连接池占用是瞬时值，每次抓取只取一个样本；每秒抓一次，一个阶段才有二十多个样本可以平均

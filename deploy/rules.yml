@@ -1,0 +1,91 @@
+# 选做 O3：读路径 SLO 的燃烧率告警（L-08 第 21 页）。由 deploy/prometheus.yml 的 rule_files 引用。
+#
+# SLO：30 天内 99% 的读请求（GET /api/courses/{id}）在 50 ms 内成功返回。
+#   好请求 = code="200" 且服务端耗时 ≤ 0.05 s（直方图 le="0.05" 的桶，与 run.sh 的 server_slo_good 同一口径）
+#   坏请求 = 其余全部：5xx（含等连接超过 -pool-timeout 返回的 503），以及成功但超过 50 ms 的
+#   错误预算 = 1 - 0.99 = 0.01
+#   燃烧率   = 窗口内坏请求比例 / 0.01；= 1 表示恰好在 30 天用完预算，= 14.4 表示约 2 天用完
+#
+# 采用“多窗口、多燃烧率”：长窗口确认“确实烧掉了相当一部分预算”，短窗口确认“现在还在烧”，
+# 两者同时超过阈值才告警。只看长窗口，故障恢复后还会响很久；只看短窗口，几秒的抖动也会叫醒人。
+#
+# 窗口按实验时长等比缩小 12 倍。生产上常用的组合与本文件的对应关系：
+#   page   ：长 1 h / 短 5 min，燃烧率 14.4（1 h 烧掉 30 天预算的 2%）  →  本文件 5m / 1m
+#   ticket ：长 6 h / 短 30 min，燃烧率 6  （6 h 烧掉 30 天预算的 5%）  →  本文件 30m / 5m
+# 阈值 14.4、6 保持不变，只缩短窗口，使一次几分钟的过载就能完整走完 inactive → pending → firing → 恢复。
+#
+# 口径限制：这是服务端 SLI，只统计进入处理函数并完成的请求；在内核或 Go 运行时里排队、
+# 被客户端超时放弃的请求不在其中（见 LAB2.md 问题 4），过载时会低估坏请求比例。
+# 没有请求时分母为 0，比例为空（不是 0，也不是 1），告警不会被触发。
+
+groups:
+  # ---- 第 1 组：记录规则。把各窗口的坏请求比例和燃烧率预先算好，告警和看板直接引用 ----
+  - name: enrolld-read-slo-recording
+    interval: 5s
+    rules:
+      - record: enrolld:read_slo_bad_ratio:rate1m
+        expr: |
+          1 - (
+            (sum(rate(http_request_duration_seconds_bucket{job="enrolld",route="/api/courses/{id}",code="200",le="0.05"}[1m])) or vector(0))
+            /
+            sum(rate(http_request_duration_seconds_count{job="enrolld",route="/api/courses/{id}"}[1m]))
+          )
+      - record: enrolld:read_slo_bad_ratio:rate5m
+        expr: |
+          1 - (
+            (sum(rate(http_request_duration_seconds_bucket{job="enrolld",route="/api/courses/{id}",code="200",le="0.05"}[5m])) or vector(0))
+            /
+            sum(rate(http_request_duration_seconds_count{job="enrolld",route="/api/courses/{id}"}[5m]))
+          )
+      - record: enrolld:read_slo_bad_ratio:rate30m
+        expr: |
+          1 - (
+            (sum(rate(http_request_duration_seconds_bucket{job="enrolld",route="/api/courses/{id}",code="200",le="0.05"}[30m])) or vector(0))
+            /
+            sum(rate(http_request_duration_seconds_count{job="enrolld",route="/api/courses/{id}"}[30m]))
+          )
+
+      # 燃烧率 = 坏请求比例 / 错误预算 0.01
+      - record: enrolld:read_slo_burn_rate:rate1m
+        expr: enrolld:read_slo_bad_ratio:rate1m / 0.01
+      - record: enrolld:read_slo_burn_rate:rate5m
+        expr: enrolld:read_slo_bad_ratio:rate5m / 0.01
+      - record: enrolld:read_slo_burn_rate:rate30m
+        expr: enrolld:read_slo_bad_ratio:rate30m / 0.01
+
+  # ---- 第 2 组：告警规则 ----
+  - name: enrolld-read-slo-alerts
+    interval: 5s
+    rules:
+      # 快速燃烧：需要立即处理（夜间叫醒值班）
+      - alert: EnrolldReadSLOFastBurn
+        expr: |
+          enrolld:read_slo_burn_rate:rate5m > 14.4
+          and
+          enrolld:read_slo_burn_rate:rate1m > 14.4
+        for: 1m
+        labels:
+          severity: page
+          slo: read-p99-50ms
+        annotations:
+          summary: "读接口错误预算快速燃烧（5m 燃烧率 {{ $value | printf \"%.1f\" }}）"
+          description: >-
+            GET /api/courses/{id} 在 5 分钟和 1 分钟窗口内的燃烧率都超过 14.4，
+            即坏请求（非 200 或超过 50 ms）比例超过 14.4%。按此速度，30 天的错误预算约 2 天内耗尽。
+            先看服务层的在途请求数、连接池等待 p99（db_pool_wait_seconds），再看资源层的 CPU 与调度等待。
+
+      # 慢速燃烧：持续消耗预算，工作时间处理（开工单）
+      - alert: EnrolldReadSLOSlowBurn
+        expr: |
+          enrolld:read_slo_burn_rate:rate30m > 6
+          and
+          enrolld:read_slo_burn_rate:rate5m > 6
+        for: 2m
+        labels:
+          severity: ticket
+          slo: read-p99-50ms
+        annotations:
+          summary: "读接口错误预算持续燃烧（30m 燃烧率 {{ $value | printf \"%.1f\" }}）"
+          description: >-
+            GET /api/courses/{id} 在 30 分钟和 5 分钟窗口内的燃烧率都超过 6，
+            即坏请求比例超过 6%。按此速度，30 天的错误预算约 5 天内耗尽，需要安排容量或代码层面的处理。
